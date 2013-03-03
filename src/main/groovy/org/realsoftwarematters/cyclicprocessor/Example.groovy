@@ -12,7 +12,8 @@ class CyclicProcessor {
 
 	def processQueue
 	def aggregateValuesQueue
-	def aggregateResults = new SimpleAggregateResults()
+	def aggregateResults
+    def factoryRequest
 
 	def executorConsumeRequestsService
 	def executorAggregateRequestsService
@@ -43,7 +44,7 @@ class CyclicProcessor {
 	def run(){
 		for(i in 1..12) {
 			println "Adding ${i}"
-			processQueue.put(new SimpleRunRequest(i))
+			processQueue.put(factoryRequest.getRunRequest())
 		}
 	}
 
@@ -81,6 +82,10 @@ class CyclicProcessor {
 }
 
 
+interface FactoryRequest{
+    def RunRequest getRunRequest()
+}
+
 /*
 * Interface for Making a request
 */
@@ -89,65 +94,8 @@ interface RunRequest<T>{
 	def T getResult()
 }
 
-
-/*
-* Sample implementation for Making a request
-*/
-class SimpleRunRequest implements RunRequest<Integer>{
-	Integer numThread
-
-	SimpleRunRequest(Integer numThread){
-		this.numThread = numThread
-	}
-
-	def makeRequest(){
-		println "making the request from number ${numThread}"
-		return this
-	}
-
-	def getResult(){
-		return 10
-	}
-}
-
-/*
-* Factory to create RuRequest Objects
-*/
-interface RunRequestFactory<R,T implements RunRequest<R>>{
-	def T getObject()
-}
-
-/*
-* Implementing RunRequest Factory
-*/
-class SimpleRunRequestFactory implements RunRequestFactory<SimpleRunRequest>{
-
-	def SingleRunRequest getObject(){
-		return null
-	}
-
-}
-
-
-
 interface AggregateResults<T>{
 	def add(T value)
 }
 
-class SimpleAggregateResults implements AggregateResults<Integer>{
-	Integer value = 0
 
-	def add(Integer i){
-		println "Adding ${i} to agregator"
-		value = value + i
-		println "Value ${value}"
-	}
-}
-
-def p = new CyclicProcessor(10,300)
-p.setup()
-p.run()
-p.shutdown()
-println("### Result #### : ${p.getAggregatorResult().value}")
-
-//Thread.sleep(50000)
